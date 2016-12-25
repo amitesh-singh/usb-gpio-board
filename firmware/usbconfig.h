@@ -249,7 +249,7 @@ section at the end of this file).
  * obdev's free shared VID/PID pair. See the file USB-IDs-for-free.txt for
  * details.
  */
-#define USB_CFG_DEVICE_NAME     'G', 'P', 'I', 'O', '-', '1', '6'
+#define USB_CFG_DEVICE_NAME     'G', 'P', 'I', 'O', '-', '1', '2'
 #define USB_CFG_DEVICE_NAME_LEN 7
 /* Same as above for the device name. If you don't want a device name, undefine
  * the macros. See the file USB-IDs-for-free.txt before you assign a name if
