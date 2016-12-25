@@ -10,3 +10,4 @@ This is a gpio over usb board based on VUSB stack for AVR atmega8 chip. It expos
  - ~~write firmware~~
  - write driver
  - design schematic
+ - Add support for https://github.com/walac/pyusb and libusb/C/Cpp  
