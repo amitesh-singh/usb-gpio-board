@@ -1,0 +1,10 @@
+*.o
+*.ko
+*.mod.*
+*.symvers
+*.cmd
+*.tmp*
+*.order
+*.hex
+*.elf
+a.out
