@@ -18,6 +18,15 @@
 
 static pktheader pkt_syn, pkt_ack;
 
+static inline uint8_t _adjust_gpio(uint8_t no)
+{
+   if (no == 3) no = 4;
+   else if (no == 4) no = 6;
+   else if (no == 5) no = 7;
+   else if (no == 6) no = 8;
+   return no;
+}
+
 static void
 _gpio_init(uint8_t no, uint8_t input)
 {
@@ -25,10 +34,8 @@ _gpio_init(uint8_t no, uint8_t input)
      {
       case 1 ... 6:
          //some adjustments since PD2 and PD4 are not available.
-         if (no == 3) no = 4;
-         else if (no == 4) no = 6;
-         else if (no == 5) no = 7;
-         else if (no == 6) no = 8;
+         if (no > 2)
+           no = _adjust_gpio(no);
 
          if (!input)
            DDRD |= (1 << (no - 1));
@@ -52,10 +59,9 @@ _gpio_access(uint8_t no, uint8_t write, uint8_t *val)
    switch(no)
      {
       case 1 ... 6:
-         if (no == 3) no = 4;
-         else if (no == 4) no = 6;
-         else if (no == 5) no = 7;
-         else if (no == 6) no = 8;
+         if (no > 2)
+           no = _adjust_gpio(no);
+
          if (write)
            {
               if (*val)
@@ -109,8 +115,8 @@ usbFunctionSetup(uchar data[8])
          break;
 
       case BOARD_RESET:
-    	  while(1); // watchdog will reset the board.
-    	  break;
+         while(1); // watchdog will reset the board.
+         break;
 
       case GPIO_INPUT:
          pkt_syn.gpio.no =  pkt_ack.gpio.no = rq->wValue.bytes[0];
