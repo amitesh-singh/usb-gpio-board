@@ -100,7 +100,6 @@ usbFunctionSetup(uchar data[8])
 
    pkt_syn.command = pkt_ack.command = rq->bRequest;
 
-   // pkt.gpio.val = gpio_val;
    switch(pkt_syn.command)
      {
       case BOARD_INIT:
@@ -108,6 +107,10 @@ usbFunctionSetup(uchar data[8])
          len = 1;
          //blink leds etcs ? we could use some port for blinking? not sure?
          break;
+
+      case BOARD_RESET:
+    	  while(1); // watchdog will reset the board.
+    	  break;
 
       case GPIO_INPUT:
          pkt_syn.gpio.no =  pkt_ack.gpio.no = rq->wValue.bytes[0];

@@ -112,13 +112,13 @@ int main(int argc, char **argv)
      int nBytes = 0;
      char buffer[256];
 
-     if(argc < 3)
+     if(argc < 2)
      {
           printf("Usage:\n");
-          printf("usbtext on gpiono\n");
-          printf("usbtext off gpiono\n");
-          printf("usbtext read gpiono\n");
-
+          printf("usbtest on gpiono\n");
+          printf("usbtest off gpiono\n");
+          printf("usbtest read gpiono\n");
+          printf("usbtest reboot\n");
           exit(1);
      }
 
@@ -141,38 +141,49 @@ int main(int argc, char **argv)
           //board init
           nBytes = usb_control_msg(handle, 
                                    USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 
-                                   0, 0, 0, buffer, 3, 5000);
+                                   BOARD_INIT, 0, 0, buffer, 3, 5000);
           printf("bytes: %d\n", nBytes);
-          //GPIO output PD0 - gpio no 1
+
           nBytes = usb_control_msg(handle,
                                    USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-                                   2, gpio_number, 0,
+                                   GPIO_OUTPUT, gpio_number, 0,
 								   buffer, 3, 5000);
           printf("bytes: %d\n", nBytes);
 
           nBytes = usb_control_msg(handle,
                                    USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-                                   4, gpio_number | (1 << 8), 0 , buffer, 3, 5000);
+                                   GPIO_WRITE, gpio_number | (1 << 8), 0 , buffer, 3, 5000);
           printf("bytes: %d\n", nBytes);
        }
      else if(strcmp(argv[1], "off") == 0)
      {
           nBytes = usb_control_msg(handle, 
                                    USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 
-                                   4, gpio_number | (0 << 8), 0,  buffer, 10, 5000);
+                                   GPIO_WRITE, gpio_number | (0 << 8), 0,  buffer, 10, 5000);
           printf("bytes: %d\n", nBytes);
      }
      else if (strcmp(argv[1], "read") == 0)
      {
     	 nBytes = usb_control_msg(handle,
     	                          USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-    	                          3, gpio_number, 0,  buffer, 3, 5000);
+    	                          GPIO_READ, gpio_number, 0,  buffer, 3, 5000);
     	  printf("bytes: %d\n", nBytes);
 
-    	  pktheader *pkt = buffer;
+    	  pktheader *pkt = (pktheader *) buffer;
 
     	  printf("gpio value: %d\n", pkt->gpio.val);
 
+     }
+     else if (strcmp(argv[1], "reboot") == 0)
+     {
+    	 nBytes = usb_control_msg(handle,
+    	    	                  USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+    	    	                  BOARD_RESET, 0, 0,  0, 0, 5000);
+    	 printf("bytes: %d\n", nBytes);
+    	 if (nBytes == -32)
+    	 {
+    		 printf("Board is rebooted....\n");
+    	 }
      }
 
      if(nBytes < 0)

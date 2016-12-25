@@ -25,6 +25,7 @@ typedef struct __attribute__((__packed__)) _pktheader
 typedef enum _command
 {
 	BOARD_INIT,
+	BOARD_RESET,
 	GPIO_INPUT,
 	GPIO_OUTPUT,
 	GPIO_READ,
