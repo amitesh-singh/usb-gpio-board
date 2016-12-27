@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include <usb.h>
+#define AVR_USB_FIRMWARE
 
 #include "../common.h"
 

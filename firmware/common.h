@@ -8,7 +8,9 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#ifdef AVR_USB_FIRMWARE
 #include <stdint.h>
+#endif
 
 typedef struct __attribute__((__packed__)) _gpio_info
 {

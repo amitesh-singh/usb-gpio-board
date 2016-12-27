@@ -13,6 +13,7 @@
 
 #include <avr/pgmspace.h>   /* required by usbdrv.h */
 #include "usbdrv.h"
+#define AVR_USB_FIRMWARE
 
 #include "common.h"
 
