@@ -1,9 +1,27 @@
 /*
- * D4 and D2 are used for vusb so we have 14 GPIOs left and PB6 and PB6 are for oscillators
+ *  GPIO-12 board firmware
+ *
+ *  (C) Amitesh Singh <singh.amitesh@gmail.com>, 2016
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*
+ *  D2(D+) and D4(D-) are used for vusb  and PB6 and PB6 are for oscillators
  *  then 12 GPIOs are only left for general purpose.
  *  PD0  - PD7 (excluding PD2/D+ and PD4/D - ) = 6
  *	PB0  - PB5 (excluding PB6 and PB7)  = 6
- * Author: (C) Amitesh Singh <singh.amitesh@gmail.com>, 2016
  */
 
 #include <avr/io.h>
@@ -13,8 +31,8 @@
 
 #include <avr/pgmspace.h>   /* required by usbdrv.h */
 #include "usbdrv.h"
-#define AVR_USB_FIRMWARE
 
+#define AVR_USB_FIRMWARE
 #include "common.h"
 
 static pktheader pkt_syn, pkt_ack;

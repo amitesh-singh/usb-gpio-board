@@ -1,3 +1,22 @@
+/*
+ *  GPIO-12 driver
+ *
+ *  (C) Amitesh Singh <singh.amitesh@gmail.com>, 2016
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -78,7 +97,8 @@ static usb_dev_handle * usbOpenDevice(int vendor, char *vendorName,
                }
 
                // get vendor name 
-               if(usbGetDescriptorString(handle, dev->descriptor.iManufacturer, 0x0409, devVendor, sizeof(devVendor)) < 0) {
+               if(usbGetDescriptorString(handle, dev->descriptor.iManufacturer, 0x0409, devVendor, sizeof(devVendor)) < 0)
+               {
                     fprintf(stderr, 
                             "Warning: cannot query manufacturer for device: %s\n", 
                             usb_strerror());
@@ -88,7 +108,8 @@ static usb_dev_handle * usbOpenDevice(int vendor, char *vendorName,
 
                // get product name 
                if(usbGetDescriptorString(handle, dev->descriptor.iProduct, 
-                                         0x0409, devProduct, sizeof(devVendor)) < 0) {
+                                         0x0409, devProduct, sizeof(devVendor)) < 0)
+               {
                     fprintf(stderr, 
                             "Warning: cannot query product for device: %s\n", 
                             usb_strerror());

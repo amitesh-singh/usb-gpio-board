@@ -22,3 +22,8 @@ This is a gpio over usb board based on VUSB stack for AVR atmega8 chip. It expos
  - Add adc driver support.
  - design schematic.
  - Add support for https://github.com/walac/pyusb and libusb/C/Cpp  
+
+## Links
+ - how to make nice pinouts: http://www.pighixxx.com/test/?s=made+a+pinout
+ http://www.pighixxx.com/test/2016/06/how-its-made-a-pinout-part-1/
+
