@@ -25,6 +25,7 @@
 #include <linux/usb.h>
 #include <linux/slab.h>
 #include <linux/gpio.h>
+#include <linux/spinlock.h>
 
 #include "../firmware/common.h"
 
@@ -43,6 +44,7 @@ struct my_usb
 {
    struct usb_device *udev;
    struct gpio_chip chip; //this is our GPIO chip
+   spinlock_t lock;
 };
 
 static void
@@ -51,14 +53,22 @@ _gpioa_set(struct gpio_chip *chip,
 {
    struct my_usb *data = container_of(chip, struct my_usb, chip);
    static uint8_t gpio_val;
+   int ret;
+   unsigned char replybuf[3];
+
+   spin_lock(&data->lock);
 
    gpio_val = value;
-   usb_control_msg(data->udev,
+   ret = usb_control_msg(data->udev,
                    usb_sndctrlpipe(data->udev, 0),
                    GPIO_WRITE, USB_TYPE_VENDOR | USB_DIR_OUT,
                    (offset + 1) | (gpio_val << 8), 0,
-                   NULL, 0,
+                   replybuf, 3,
                    1000);
+   spin_unlock(&data->lock);
+
+   if (ret != sizeof(pktheader))
+	   dev_err(chip->dev, "usb error setting pin value\n");
 }
 
 static int
@@ -66,20 +76,25 @@ _gpioa_get(struct gpio_chip *chip,
            unsigned offset)
 {
    struct my_usb *data = container_of(chip, struct my_usb, chip);
-
    unsigned char replybuf[3];
    pktheader *pkt;
+   int ret;
 
    printk(KERN_INFO "GPIO GET INFO: %d", offset);
 
-   usb_control_msg(data->udev,
+   spin_lock(&data->lock);
+   ret = usb_control_msg(data->udev,
                    usb_sndctrlpipe(data->udev, 0),
                    GPIO_READ, USB_TYPE_VENDOR | USB_DIR_OUT,
                    (offset + 1), 0,
 				   replybuf, 3,
                    1000);
+   spin_unlock(&data->lock);
 
    pkt = (pktheader *)replybuf;
+
+   if (ret != sizeof(pktheader))
+	   return -EREMOTEIO;
 
    return pkt->gpio.val;
 }
@@ -89,17 +104,26 @@ _direction_output(struct gpio_chip *chip,
                   unsigned offset, int value)
 {
    struct my_usb *data = container_of(chip, struct my_usb, chip);
+   int ret;
+   unsigned char replybuf[3];
 
-   printk("Setting pin to OUTPUT");
+   printk(KERN_ALERT "Setting pin to OUTPUT: offset %d", offset);
 
-   usb_control_msg(data->udev,
+   spin_lock(&data->lock);
+
+   ret = usb_control_msg(data->udev,
                    usb_sndctrlpipe(data->udev, 0),
                    GPIO_OUTPUT, USB_TYPE_VENDOR | USB_DIR_OUT,
                    (offset + 1), 0,
-                   NULL, 0,
+                   replybuf, 3,
                    1000);
 
-   return offset;
+   spin_unlock(&data->lock);
+
+   if (ret != sizeof(pktheader) - 1)
+	   return -EREMOTEIO;
+
+   return 0;
 }
 
 static int
@@ -107,17 +131,24 @@ _direction_input(struct gpio_chip *chip,
                  unsigned offset)
 {
    struct my_usb *data = container_of(chip, struct my_usb, chip);
+   int ret;
+   unsigned char replybuf[3];
 
    printk("setting pin to INPUT");
 
-   usb_control_msg(data->udev,
+   spin_lock(&data->lock);
+   ret = usb_control_msg(data->udev,
                    usb_sndctrlpipe(data->udev, 0),
                    GPIO_INPUT, USB_TYPE_VENDOR | USB_DIR_OUT,
                    (offset + 1), 0,
-                   NULL, 0,
+				   replybuf, 3,
                    1000);
+   spin_unlock(&data->lock);
 
-   return offset;
+   if (ret != sizeof(pktheader) - 1)
+	   return -EREMOTEIO;
+
+   return 0;
 }
 
 //static int
@@ -128,16 +159,15 @@ _direction_input(struct gpio_chip *chip,
 //   return 2;
 //}
 
-//called when a usb device is connected to PC
 static int
 my_usb_probe(struct usb_interface *interface,
              const struct usb_device_id *id)
 {
    struct usb_device *udev = interface_to_usbdev(interface);
    struct usb_host_interface *iface_desc;
-   //struct usb_endpoint_descriptor *endpoint;
    struct my_usb *data;
-   //int i;
+   unsigned char replybuf[3];
+   int ret;
 
    printk(KERN_INFO "manufacturer: %s", udev->manufacturer);
    printk(KERN_INFO "product: %s", udev->product);
@@ -146,19 +176,6 @@ my_usb_probe(struct usb_interface *interface,
    printk(KERN_INFO "GPIO-12 board %d probed: (%04X:%04X)",
           iface_desc->desc.bInterfaceNumber, id->idVendor, id->idProduct);
    printk(KERN_INFO "bNumEndpoints: %d", iface_desc->desc.bNumEndpoints);
-
-   //There is no endpoint. we are using default control in and out for data transfer.
-   //   for (i = 0; i < iface_desc->desc.bNumEndpoints; i++)
-   //     {
-   //        endpoint = &iface_desc->endpoint[i].desc;
-   //
-   //        printk(KERN_INFO "ED[%d]->bEndpointAddress: 0x%02X\n",
-   //               i, endpoint->bEndpointAddress);
-   //        printk(KERN_INFO "ED[%d]->bmAttributes: 0x%02X\n",
-   //               i, endpoint->bmAttributes);
-   //        printk(KERN_INFO "ED[%d]->wMaxPacketSize: 0x%04X (%d)\n",
-   //               i, endpoint->wMaxPacketSize, endpoint->wMaxPacketSize);
-   //     }
 
    data = kzalloc(sizeof(struct my_usb), GFP_KERNEL);
    if (data == NULL)
@@ -195,19 +212,24 @@ my_usb_probe(struct usb_interface *interface,
    usb_set_intfdata(interface, data);
 
    printk(KERN_INFO "usb %s is connected", data->chip.label);
+   spin_lock_init(&data->lock);
 
    //init the board
-   usb_control_msg(data->udev,
+   spin_lock(&data->lock);
+   ret = usb_control_msg(data->udev,
                    usb_sndctrlpipe(data->udev, 0),
                    BOARD_INIT, USB_TYPE_VENDOR | USB_DIR_OUT,
                    0, 0,
-                   NULL, 0,
+                   replybuf, 3,
                    1000);
+   spin_unlock(&data->lock);
+
+   if (ret != sizeof(pktheader) - 2)
+	   return -EREMOTEIO;
 
    return 0;
 }
 
-//called when unplugging a USB device
 static void
 my_usb_disconnect(struct usb_interface *interface)
 {

@@ -12,7 +12,7 @@ This is a gpio over usb board based on VUSB stack for AVR atmega8 chip. It expos
 ### TODOs
  - ~~write firmware~~
  - ~~write basic gpio driver~~
- - Add support of locking in gpio driver.
+ - ~~Add support of spin locking in gpio driver.~~
  - Add support of spi bitbang driver.
  - Add support of spi hw in firmware.
  - Add support of spi hw driver.
