@@ -27,7 +27,7 @@
 #include <linux/gpio.h>
 #include <linux/spinlock.h>
 
-#include "../firmware/common.h"
+#include "../../firmware/common.h"
 
 /*
  * usb_control_msg(struct usb_device *dev, unsigned int pipe,
