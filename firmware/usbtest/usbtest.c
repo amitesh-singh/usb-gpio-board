@@ -144,7 +144,7 @@ int main(int argc, char **argv)
           exit(1);
      }
 
-     handle = usbOpenDevice(0x16C0, "ami", 0x03E8, "GPIO-16");
+     handle = usbOpenDevice(0x16C0, "ami", 0x03E8, "GPIO-12");
 
      if(handle == NULL)
      {
@@ -163,18 +163,18 @@ int main(int argc, char **argv)
           //board init
           nBytes = usb_control_msg(handle, 
                                    USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 
-                                   BOARD_INIT, 0, 0, buffer, 3, 5000);
+                                   BOARD_INIT, 0, 0, buffer, 3, 1000);
           printf("bytes: %d\n", nBytes);
 
           nBytes = usb_control_msg(handle,
                                    USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
                                    GPIO_OUTPUT, gpio_number, 0,
-								   buffer, 3, 5000);
+								   buffer, 3, 1000);
           printf("bytes: %d\n", nBytes);
 
           nBytes = usb_control_msg(handle,
                                    USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-                                   GPIO_WRITE, gpio_number | (1 << 8), 0 , buffer, 3, 5000);
+                                   GPIO_WRITE, gpio_number | (1 << 8), 0 , buffer, 3, 1000);
           printf("bytes: %d\n", nBytes);
        }
      else if(strcmp(argv[1], "off") == 0)
