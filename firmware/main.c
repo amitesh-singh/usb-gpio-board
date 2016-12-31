@@ -168,6 +168,8 @@ usbFunctionSetup(uchar data[8])
          len = 3;
          break;
 
+         ///////// SPI does not seem to work. there is always a reset of device in case
+         // you try to send multiple spi pkts
       case SPI_INIT:
          DDRB |= (1 << MOSI) | (1 << SCK) | (1 << SS);
          DDRB &= ~(1 << MISO);
