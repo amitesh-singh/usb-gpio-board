@@ -145,6 +145,7 @@ int main(int argc, char **argv)
         printf("ubstest spiinit\n");
         printf("usbtest spiend\n");
         printf("usbtest spidata data\n");
+        printf("usbtest gpiotest no\n");
         exit(1);
      }
 
@@ -211,6 +212,7 @@ int main(int argc, char **argv)
              printf("Board is rebooted....\n");
           }
      }
+   /*
    else if(!strcmp(argv[1], "spiinit"))
      {
         nBytes = usb_control_msg(handle,
@@ -267,6 +269,28 @@ int main(int argc, char **argv)
                                  SPI_END, 0, 0,  buffer, 3, 5000);
 
      }
+     */
+   else if (!strcmp(argv[1], "gpiotest"))
+     {
+        int i = 0;
+        nBytes = usb_control_msg(handle,
+                                 USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 GPIO_OUTPUT, gpio_number, 0,
+                                 buffer, 3, 1000);
+        //got speed around 1Khz
+        for (; i < 100000; ++i)
+          {
+             nBytes = usb_control_msg(handle,
+                                      USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                      GPIO_WRITE, gpio_number | (1 << 8), 0 , buffer, 3, 1000);
+             //usleep(400000);
+             nBytes = usb_control_msg(handle,
+                                      USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                      GPIO_WRITE, gpio_number | (0 << 8), 0,  buffer, 10, 5000);
+             //usleep(400000);
+          }
+     }
+
 
    if(nBytes < 0)
      fprintf(stderr, "USB error: %s\n", usb_strerror());

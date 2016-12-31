@@ -18,18 +18,18 @@
  */
 
 /*
- *  D2(D+) and D4(D-) are used for vusb  and PB6 and PB6 are for oscillators
+ *  D2(D+) and D4(D-) are used for vusb  and PB6 and PB6 are used for 16MHz crystal
  *  then 12 GPIOs are only left for general purpose.
  *  PD0  - PD7 (excluding PD2/D+ and PD4/D - ) = 6
  *	PB0  - PB5 (excluding PB6 and PB7)  = 6
  */
 
 #include <avr/io.h>
-#include <avr/wdt.h>        /* Watch dog */
-#include <avr/interrupt.h>  /* for sei() */
-#include <util/delay.h>     /* for _delay_ms() */
+#include <avr/wdt.h>
+#include <avr/interrupt.h>
+#include <util/delay.h>
 
-#include <avr/pgmspace.h>   /* required by usbdrv.h */
+#include <avr/pgmspace.h>
 #include "usbdrv.h"
 
 #define AVR_USB_FIRMWARE
@@ -117,10 +117,12 @@ _gpio_access(uint8_t no, uint8_t write, uint8_t *val)
      }
 }
 
+/*
 #define MOSI PB3
 #define MISO PB4
 #define SCK PB5
 #define SS PB3
+*/
 
 usbMsgLen_t
 usbFunctionSetup(uchar data[8])
@@ -170,6 +172,7 @@ usbFunctionSetup(uchar data[8])
 
          ///////// SPI does not seem to work. there is always a reset of device in case
          // you try to send multiple spi pkts
+         /*
       case SPI_INIT:
          DDRB |= (1 << MOSI) | (1 << SCK) | (1 << SS);
          DDRB &= ~(1 << MISO);
@@ -203,6 +206,8 @@ usbFunctionSetup(uchar data[8])
          SPCR = 0;
          len = 1;
          break;
+         ////////////////////////////////////////////////////////////////////
+         */
 
       default:
          break;
@@ -220,17 +225,19 @@ main(void)
 
    wdt_enable(WDTO_2S);
    usbInit();
-   usbDeviceDisconnect();  /* enforce re-enumeration, do this while interrupts are disabled! */
+   usbDeviceDisconnect();
 
    while(--i)
-     {             /* fake USB disconnect for > 250 ms */
+     {
         wdt_reset();
         _delay_ms(1);
      }
+
    usbDeviceConnect();
    sei();
+
    while(1)
-     {                /* main event loop */
+     {
         wdt_reset();
         usbPoll();
      }

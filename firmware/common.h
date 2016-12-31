@@ -26,27 +26,27 @@
 
 typedef struct __attribute__((__packed__)) _gpio_info
 {
-	uint8_t no;
-	uint8_t val;
+   uint8_t no;
+   uint8_t val;
 } gpio_info;
 
 typedef struct __attribute__((__packed__)) _pktheader
 {
-	uint8_t command;
-	gpio_info gpio;
+   uint8_t command;
+   gpio_info gpio;
 } pktheader;
 
 typedef enum _command
 {
-	BOARD_INIT,
-	BOARD_RESET,
-	GPIO_INPUT,
-	GPIO_OUTPUT,
-	GPIO_READ,
-	GPIO_WRITE,
-	SPI_INIT,
-	SPI_DATA,
-	SPI_END,
+   BOARD_INIT,
+   BOARD_RESET,
+   GPIO_INPUT,
+   GPIO_OUTPUT,
+   GPIO_READ,
+   GPIO_WRITE,
+//   SPI_INIT,
+//   SPI_DATA,
+//   SPI_END,
 } command;
 
 
