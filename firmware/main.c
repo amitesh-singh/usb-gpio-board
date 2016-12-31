@@ -117,6 +117,11 @@ _gpio_access(uint8_t no, uint8_t write, uint8_t *val)
      }
 }
 
+#define MOSI PB3
+#define MISO PB4
+#define SCK PB5
+#define SS PB3
+
 usbMsgLen_t
 usbFunctionSetup(uchar data[8])
 {
@@ -163,6 +168,40 @@ usbFunctionSetup(uchar data[8])
          len = 3;
          break;
 
+      case SPI_INIT:
+         DDRB |= (1 << MOSI) | (1 << SCK) | (1 << SS);
+         DDRB &= ~(1 << MISO);
+         SPCR |= (1 << SPE) | (1 << MSTR) | (1 << SPR0); //f_ck/16 = 1Mhz
+         DDRD |= (1 << PD0);
+         len = 1;
+         break;
+
+      case SPI_DATA:
+         pkt_syn.gpio.val = rq->wValue.bytes[1];
+         //PORTB &= ~(1 << SS);
+         SPDR = pkt_syn.gpio.val;
+         while (!(SPSR & (1 << SPIF)))
+           {
+              //if i don;t do usbPoll(), the usb device gets disconnected.
+              usbPoll();
+              // wait for SPI process to finish
+           }
+         //PORTB |= (1 << SS);
+         //PORTB &= ~(1 << SS);
+
+         pkt_ack.gpio.val = pkt_syn.gpio.val;
+         //TODO: test with real spi slave device.
+         //This seems to reset the device.
+         //pkt_ack.gpio.val = SPDR;
+         //usbPoll();
+         len = 3;
+         break;
+
+      case SPI_END:
+         SPCR = 0;
+         len = 1;
+         break;
+
       default:
          break;
      }
@@ -177,7 +216,7 @@ main(void)
 {
    uchar i = 0;
 
-   wdt_enable(WDTO_1S);
+   wdt_enable(WDTO_2S);
    usbInit();
    usbDeviceDisconnect();  /* enforce re-enumeration, do this while interrupts are disabled! */
 

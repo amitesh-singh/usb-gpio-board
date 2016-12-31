@@ -44,6 +44,9 @@ typedef enum _command
 	GPIO_OUTPUT,
 	GPIO_READ,
 	GPIO_WRITE,
+	SPI_INIT,
+	SPI_DATA,
+	SPI_END,
 } command;
 
 

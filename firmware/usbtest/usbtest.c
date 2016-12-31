@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <usb.h>
 #define AVR_USB_FIRMWARE
@@ -233,6 +234,38 @@ int main(int argc, char **argv)
                                  USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
                                  SPI_DATA, 0 | (spi_data << 8), 0,  buffer, 3, 5000);
         printf("bytes: %d\n", nBytes);
+     }
+   else if (!strcmp(argv[1], "spitest"))
+     {
+        char *data_str = argv[2];
+        unsigned char spi_data = atoi(data_str);
+        printf("spi data to be send %d\n", spi_data);
+        nBytes = usb_control_msg(handle,
+                                 USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 SPI_INIT, 0, 0,  buffer, 3, 5000);
+        int i = 0;
+
+        for (; i < 1000000; ++i)
+          {
+             printf("spi data to be send %d\n", spi_data);
+             memset(buffer, 0, 3);
+             nBytes = usb_control_msg(handle,
+                                      USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                      SPI_DATA, 0 | (spi_data << 8), 0,  buffer, 3, 5000);
+             //uint8_t val = buffer[2];
+             printf("output: %x: %x, %x\n", buffer[0], buffer[1], buffer[2]);
+             memset(buffer, 0, 3);
+             sleep(1);
+             nBytes = usb_control_msg(handle,
+                                      USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                      SPI_DATA, 0 << 8, 0,  buffer, 3, 5000);
+             printf("output - down: %x: %x, %x\n", buffer[0], buffer[1], buffer[2]);
+             sleep(1);
+          }
+        nBytes = usb_control_msg(handle,
+                                 USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 SPI_END, 0, 0,  buffer, 3, 5000);
+
      }
 
    if(nBytes < 0)
