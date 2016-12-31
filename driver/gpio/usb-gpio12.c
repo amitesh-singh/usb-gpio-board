@@ -121,8 +121,6 @@ _direction_output(struct gpio_chip *chip,
    struct my_usb *data = container_of(chip, struct my_usb, chip);
    int ret;
 
-   printk(KERN_ALERT "Setting pin to OUTPUT: offset %d", offset);
-
    spin_lock(&data->lock);
 
    ret = usb_control_msg(data->udev,
@@ -161,8 +159,6 @@ _direction_input(struct gpio_chip *chip,
    int ret;
    unsigned char replybuf[3];
 
-   printk("setting pin to INPUT");
-
    spin_lock(&data->lock);
    ret = usb_control_msg(data->udev,
                          usb_sndctrlpipe(data->udev, 0),
@@ -198,7 +194,6 @@ my_usb_probe(struct usb_interface *interface,
    struct usb_device *udev = interface_to_usbdev(interface);
    struct usb_host_interface *iface_desc;
    struct my_usb *data;
-   unsigned char *replybuf;
    int ret;
 
    printk(KERN_INFO "manufacturer: %s", udev->manufacturer);
@@ -235,13 +230,13 @@ my_usb_probe(struct usb_interface *interface,
    data->timeout = 100;
 
    if (gpiochip_add(&data->chip) < 0)
-     printk(KERN_ALERT "Failed to add gpio chip");
-   else
-     printk(KERN_INFO "Able to add gpiochip: %s", data->chip.label);
+   {
+	   printk(KERN_ALERT "Failed to add gpio chip");
+	   return -ENODEV;
+   }
 
    usb_set_intfdata(interface, data);
 
-   printk(KERN_INFO "usb %s is connected", data->chip.label);
    spin_lock_init(&data->lock);
 
    //init the board
@@ -263,9 +258,6 @@ my_usb_probe(struct usb_interface *interface,
                          data->timeout);
    spin_unlock(&data->lock);
 
-   replybuf = data->buf;
-   printk(KERN_ALERT "%X:%X:%X", replybuf[0], replybuf[1], replybuf[2]);
-   printk(KERN_ALERT "ret = %d, func= %s ", ret, __func__);
    if (ret != sizeof(pktheader) - 2)
      {
         printk(KERN_ALERT "ret = %d, func= %s Failed to get correct reply", ret, __func__);
@@ -290,8 +282,6 @@ my_usb_disconnect(struct usb_interface *interface)
    usb_put_dev(data->udev);
 
    kfree(data);
-
-   printk(KERN_INFO "usb device is disconnected");
 }
 
 #define MY_USB_VENDOR_ID 0x16c0
@@ -310,29 +300,12 @@ static struct usb_driver my_usb_driver = {
      .disconnect = my_usb_disconnect,
 };
 
-//we could use module_usb_driver(my_usb_driver); instead of 
-// init and exit functions
-//called on module loading
 static int __init
 _usb_init(void)
 {
-   int result;
-   printk(KERN_INFO "usb driver is loaded");
-
-   result = usb_register(&my_usb_driver);
-   if (result)
-     {
-        printk(KERN_ALERT "device registeration failed!!");
-     }
-   else
-     {
-        printk(KERN_INFO "device registered");
-     }
-
-   return result;
+  return usb_register(&my_usb_driver);
 }
 
-//called on module unloading
 static void __exit
 _usb_exit(void)
 {
