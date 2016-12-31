@@ -44,6 +44,8 @@ struct my_usb
 {
    struct usb_device *udev;
    struct gpio_chip chip; //this is our GPIO chip
+   u8 buf[3];
+   u32 timeout;
    spinlock_t lock;
 };
 
@@ -54,7 +56,6 @@ _gpioa_set(struct gpio_chip *chip,
    struct my_usb *data = container_of(chip, struct my_usb, chip);
    static uint8_t gpio_val;
    int ret;
-   unsigned char replybuf[3];
 
    spin_lock(&data->lock);
 
@@ -63,12 +64,18 @@ _gpioa_set(struct gpio_chip *chip,
                    usb_sndctrlpipe(data->udev, 0),
                    GPIO_WRITE, USB_TYPE_VENDOR | USB_DIR_OUT,
                    (offset + 1) | (gpio_val << 8), 0,
-                   replybuf, 3,
+                   0, 0,
+                   1000);
+   ret = usb_control_msg(data->udev,
+                   usb_rcvctrlpipe(data->udev, 0),
+                   GPIO_WRITE, USB_TYPE_VENDOR | USB_DIR_IN,
+                   (offset + 1) | (gpio_val << 8), 0,
+                   (u8 *)data->buf, 3,
                    1000);
    spin_unlock(&data->lock);
 
    if (ret != sizeof(pktheader))
-	   dev_err(chip->dev, "usb error setting pin value\n");
+     dev_err(chip->dev, "usb error setting pin value\n");
 }
 
 static int
@@ -76,7 +83,6 @@ _gpioa_get(struct gpio_chip *chip,
            unsigned offset)
 {
    struct my_usb *data = container_of(chip, struct my_usb, chip);
-   unsigned char replybuf[3];
    pktheader *pkt;
    int ret;
 
@@ -87,14 +93,23 @@ _gpioa_get(struct gpio_chip *chip,
                    usb_sndctrlpipe(data->udev, 0),
                    GPIO_READ, USB_TYPE_VENDOR | USB_DIR_OUT,
                    (offset + 1), 0,
-				   replybuf, 3,
+                   0, 0,
+                   1000);
+   ret = usb_control_msg(data->udev,
+                   usb_rcvctrlpipe(data->udev, 0),
+                   GPIO_READ, USB_TYPE_VENDOR | USB_DIR_IN,
+                   (offset + 1), 0,
+                   (u8 *)data->buf, 3,
                    1000);
    spin_unlock(&data->lock);
 
-   pkt = (pktheader *)replybuf;
+   pkt = (pktheader *)data->buf;
 
    if (ret != sizeof(pktheader))
-	   return -EREMOTEIO;
+     {
+        printk(KERN_ALERT "ret = %d Failed to get correct reply", ret);
+        //return -EREMOTEIO;
+     }
 
    return pkt->gpio.val;
 }
@@ -105,7 +120,7 @@ _direction_output(struct gpio_chip *chip,
 {
    struct my_usb *data = container_of(chip, struct my_usb, chip);
    int ret;
-   unsigned char replybuf[3];
+   //unsigned char *replybuf;
 
    printk(KERN_ALERT "Setting pin to OUTPUT: offset %d", offset);
 
@@ -115,13 +130,29 @@ _direction_output(struct gpio_chip *chip,
                    usb_sndctrlpipe(data->udev, 0),
                    GPIO_OUTPUT, USB_TYPE_VENDOR | USB_DIR_OUT,
                    (offset + 1), 0,
-                   replybuf, 3,
+                   0, 0,
+                   1000);
+   if (ret != 0)
+   {
+	   dev_err(chip->dev, "Failed to send data to usb device\n");
+   }
+   ret = usb_control_msg(data->udev,
+                   usb_rcvctrlpipe(data->udev, 0),
+                   GPIO_OUTPUT, USB_TYPE_VENDOR | USB_DIR_IN,
+                   (offset + 1), 0,
+                   (u8 *)data->buf, 3,
                    1000);
 
    spin_unlock(&data->lock);
 
+   //replybuf = data->buf;
+
+   //printk(KERN_ALERT "%X:%X:%X", replybuf[0], replybuf[1], replybuf[2]);
    if (ret != sizeof(pktheader) - 1)
-	   return -EREMOTEIO;
+     {
+        printk(KERN_ALERT "ret = %d Failed to get correct reply", ret);
+        //return -EREMOTEIO;
+     }
 
    return 0;
 }
@@ -141,12 +172,25 @@ _direction_input(struct gpio_chip *chip,
                    usb_sndctrlpipe(data->udev, 0),
                    GPIO_INPUT, USB_TYPE_VENDOR | USB_DIR_OUT,
                    (offset + 1), 0,
-				   replybuf, 3,
+                   0, 0,
+                   1000);
+   if (ret != 0)
+   {
+	   dev_err(chip->dev, "Failed to send data to device\n");
+   }
+   ret = usb_control_msg(data->udev,
+                   usb_rcvctrlpipe(data->udev, 0),
+                   GPIO_INPUT, USB_TYPE_VENDOR | USB_DIR_IN,
+                   (offset + 1), 0,
+                   replybuf, 3,
                    1000);
    spin_unlock(&data->lock);
 
    if (ret != sizeof(pktheader) - 1)
-	   return -EREMOTEIO;
+     {
+        printk(KERN_ALERT "ret= %d Failed to get correct reply", ret);
+        //return -EREMOTEIO;
+     }
 
    return 0;
 }
@@ -166,7 +210,7 @@ my_usb_probe(struct usb_interface *interface,
    struct usb_device *udev = interface_to_usbdev(interface);
    struct usb_host_interface *iface_desc;
    struct my_usb *data;
-   unsigned char replybuf[3];
+   unsigned char *replybuf;
    int ret;
 
    printk(KERN_INFO "manufacturer: %s", udev->manufacturer);
@@ -216,16 +260,31 @@ my_usb_probe(struct usb_interface *interface,
 
    //init the board
    spin_lock(&data->lock);
-   ret = usb_control_msg(data->udev,
-                   usb_sndctrlpipe(data->udev, 0),
+   ret = usb_control_msg(data->udev, usb_sndctrlpipe(data->udev, 0),
                    BOARD_INIT, USB_TYPE_VENDOR | USB_DIR_OUT,
                    0, 0,
-                   replybuf, 3,
+                   0, 0,
+                   1000);
+   if (ret != 0)
+   {
+	   dev_err(data->chip.dev, "Failed to send data to device\n");
+   }
+   ret = usb_control_msg(data->udev,
+                   usb_rcvctrlpipe(data->udev, 0),
+                   BOARD_INIT, USB_TYPE_VENDOR | USB_DIR_IN,
+                   0, 0,
+                   (u8 *)data->buf, 3,
                    1000);
    spin_unlock(&data->lock);
 
+   replybuf = data->buf;
+   printk(KERN_ALERT "%X:%X:%X", replybuf[0], replybuf[1], replybuf[2]);
+   printk(KERN_ALERT "ret = %d, func= %s ", ret, __func__);
    if (ret != sizeof(pktheader) - 2)
-	   return -EREMOTEIO;
+     {
+        printk(KERN_ALERT "ret = %d, func= %s Failed to get correct reply", ret, __func__);
+       // return -EREMOTEIO;
+     }
 
    return 0;
 }
