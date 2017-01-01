@@ -1,8 +1,15 @@
 ### GPIO-12 board
 
-This is a gpio over usb board based on VUSB stack for AVR atmega8 chip. It exposes 12 GPIO ports.
+This is a gpio over usb board based on [VUSB](https://www.obdev.at/products/vusb/index.html) stack for AVR atmega8 chip. It exposes 12 GPIO ports.
 
-### how to flash mega8
+My current prototype uses [USBPrayog Board](http://rarecomponents.com/store/1411?search=prayog) from
+[rarecomponents.com](http://rarecomponents.com).
+
+I shall produce an exclusive kicad schematic for this board soon.
+[![board in action](https://img.youtube.com/vi/E6ALEKi3zcU/0.jpg)](https://www.youtube.com/watch?v=E6ALEKi3zcU)
+
+
+### How to flash mega8
 `cd firmware`  
 `make hex`  
 `avrdude -c usbasp -p m8 -U flash:w:main.hex`  
@@ -38,17 +45,15 @@ PB7          | not available (used by crystal)
            `gpiochip**N**` where **N** is the value allocated by kernel   
 `$ sudo chmod 666 export unexport`  
 `$ echo **N** > export`  
-To Allocate next gpio (depending upon gpio_chip.ngpio value),  
-`$ echo **N+1 > export`
- a folder named gpioN must be created  
 `$ cd gpio**N**`  
+`$ echo out > direction`  
 `$ cat value`  
 `$ echo 1 > value`  
 `$ echo 0 > value`  
 
 Before unloading the module, do $ echo **N** > unexport  
 gpio**N** gets deleted by doing so.  
-To unload the module, `$ sudo rmmod usb_gpio`  
+To unload the module, `$ sudo rmmod usb_gpio12`  
 
 ### How to control gpio pins via libusb
 In case, you want to control gpio ports via libusb, follow this guide.
@@ -135,11 +140,14 @@ pktheader *reply = (pktheader *)buffer;
 ```
 
 you can look into [ubstest](https://raw.githubusercontent.com/amitesh-singh/usb-gpio-board/master/firmware/usbtest/usbtest.c) example for more details.
+#### example
+- [on-off](https://raw.githubusercontent.com/amitesh-singh/usb-gpio-board/master/examples/on-off/on-off.c)  
+
 
 ### GPIO write speed
 
-In my testing with logic analyzer, its close to 1Khz.
-![GPIO write speed](./gpio_write_speed.png)
+GPIO write speed is close to 1Khz.
+![GPIO write speed - logic analyzer](./photos/gpio_write_speed.png)
 ### TODOs
  - ~~write firmware~~
  - ~~write basic gpio driver~~
@@ -157,3 +165,4 @@ In my testing with logic analyzer, its close to 1Khz.
 ## Links
  - how to make nice pinouts: http://www.pighixxx.com/test/?s=made+a+pinout
  http://www.pighixxx.com/test/2016/06/how-its-made-a-pinout-part-1/
+- VUSB: https://www.obdev.at/products/vusb/index.html
