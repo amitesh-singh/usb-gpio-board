@@ -149,12 +149,12 @@ you can look into [ubstest](https://raw.githubusercontent.com/amitesh-singh/usb-
 GPIO write speed is close to 1Khz.
 ![GPIO write speed - logic analyzer](./photos/gpio_write_speed.png)
 ### TODOs
- - ~~write firmware~~
- - ~~write basic gpio driver~~
- - ~~Add support of spin locking in gpio driver.~~
+ - ~~write firmware~~ **DONE**
+ - ~~write basic gpio driver~~ **DONE**
+ - ~~Add support of spin locking in gpio driver.~~ **DONE**
  - Add support of spi bitbang driver.
- - ~~Add support of spi hw in firmware.~~ board gets reset everytime on spi. not possible
- - ~~Add support of spi hw driver.~~ not required.
+ - ~~Add support of spi hw in firmware.~~ **DONE** 
+ - Add support of spi hw driver.
  - Add support of i2c in firmware.
  - Add support of i2c driver.
  - Add adc support in firmware.

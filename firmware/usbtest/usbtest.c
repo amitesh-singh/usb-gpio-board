@@ -166,27 +166,26 @@ int main(int argc, char **argv)
    if(strcmp(argv[1], "on") == 0)
      {
         //board init
-        nBytes = usb_control_msg(handle, 
-                                 USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 
-                                 BOARD_INIT, 0, 0, buffer, 3, 1000);
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 
+                                 BOARD_INIT, 0, 0,
+                                 buffer, 3, 1000);
         printf("bytes: %d\n", nBytes);
 
-        nBytes = usb_control_msg(handle,
-                                 USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
                                  GPIO_OUTPUT, gpio_number, 0,
                                  buffer, 3, 1000);
         printf("bytes: %d\n", nBytes);
 
-        nBytes = usb_control_msg(handle,
-                                 USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-                                 GPIO_WRITE, gpio_number | (1 << 8), 0 , buffer, 3, 1000);
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 GPIO_WRITE, gpio_number | (1 << 8), 0 ,
+                                 buffer, 3, 1000);
         printf("bytes: %d\n", nBytes);
      }
    else if(strcmp(argv[1], "off") == 0)
      {
-        nBytes = usb_control_msg(handle, 
-                                 USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 
-                                 GPIO_WRITE, gpio_number | (0 << 8), 0,  buffer, 10, 5000);
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 
+                                 GPIO_WRITE, gpio_number | (0 << 8), 0,
+                                 buffer, 10, 5000);
         printf("bytes: %d\n", nBytes);
      }
    else if (strcmp(argv[1], "read") == 0)
@@ -203,90 +202,105 @@ int main(int argc, char **argv)
      }
    else if (strcmp(argv[1], "reboot") == 0)
      {
-        nBytes = usb_control_msg(handle,
-                                 USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-                                 BOARD_RESET, 0, 0,  0, 0, 5000);
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 BOARD_RESET, 0, 0,
+                                 0, 0, 5000);
         printf("bytes: %d\n", nBytes);
         if (nBytes == -32)
           {
              printf("Board is rebooted....\n");
           }
      }
-   /*
+
    else if(!strcmp(argv[1], "spiinit"))
      {
-        nBytes = usb_control_msg(handle,
-                                 USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-                                 SPI_INIT, 0, 0,  buffer, 3, 5000);
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 SPI_INIT, 0, 0,
+                                 buffer, 3, 5000);
         printf("bytes: %d\n", nBytes);
      }
    else if (!strcmp(argv[1], "spiend"))
      {
-        nBytes = usb_control_msg(handle,
-                                 USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-                                 SPI_END, 0, 0,  buffer, 3, 5000);
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 SPI_END, 0, 0,
+                                 buffer, 3, 5000);
         printf("bytes: %d\n", nBytes);
      }
    else if (!strcmp(argv[1], "spidata"))
      {
         char *data_str = argv[2];
         unsigned char spi_data = atoi(data_str);
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 SPI_INIT, 0, 0,
+                                 0, 0, 5000);
+        printf("spi_init: bytes: %d\n", nBytes);
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 SPI_DATA, 0 | (spi_data << 8), 0,
+                                 buffer, 3, 5000);
+        printf("spi_data: bytes: %d\n", nBytes);
+        printf("output:- %x:%x:%x\n", buffer[0], buffer[1], buffer[2]);
 
-        nBytes = usb_control_msg(handle,
-                                 USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-                                 SPI_DATA, 0 | (spi_data << 8), 0,  buffer, 3, 5000);
-        printf("bytes: %d\n", nBytes);
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 SPI_END, 0, 0,
+                                 0, 0, 5000);
+        printf("spi_end: bytes: %d\n", nBytes);
      }
    else if (!strcmp(argv[1], "spitest"))
      {
         char *data_str = argv[2];
         unsigned char spi_data = atoi(data_str);
         printf("spi data to be send %d\n", spi_data);
-        nBytes = usb_control_msg(handle,
-                                 USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-                                 SPI_INIT, 0, 0,  buffer, 3, 5000);
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 SPI_INIT, 0, 0,
+                                 buffer, 3, 5000);
+        printf("spi_init: bytes: %d\n", nBytes);
+
         int i = 0;
 
         for (; i < 1000000; ++i)
           {
              printf("spi data to be send %d\n", spi_data);
              memset(buffer, 0, 3);
-             nBytes = usb_control_msg(handle,
-                                      USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-                                      SPI_DATA, 0 | (spi_data << 8), 0,  buffer, 3, 5000);
+             nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                      SPI_DATA, 0 | (spi_data << 8), 0,
+                                      buffer, 3, 5000);
+             printf("spi_data: bytes: %d\n", nBytes);
+
              //uint8_t val = buffer[2];
              printf("output: %x: %x, %x\n", buffer[0], buffer[1], buffer[2]);
              memset(buffer, 0, 3);
              sleep(1);
-             nBytes = usb_control_msg(handle,
-                                      USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-                                      SPI_DATA, 0 << 8, 0,  buffer, 3, 5000);
-             printf("output - down: %x: %x, %x\n", buffer[0], buffer[1], buffer[2]);
+             printf("spi data to be send 0\n");
+
+             nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                      SPI_DATA, 0 << 8, 0,
+                                      buffer, 3, 5000);
+             printf("spi_data: bytes: %d\n", nBytes);
+
+             printf("output - down: %x: %x, %x\n\n", buffer[0], buffer[1], buffer[2]);
              sleep(1);
           }
-        nBytes = usb_control_msg(handle,
-                                 USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-                                 SPI_END, 0, 0,  buffer, 3, 5000);
-
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 SPI_END, 0, 0,
+                                 buffer, 3, 5000);
+        printf("spi_end: bytes: %d\n", nBytes);
      }
-     */
    else if (!strcmp(argv[1], "gpiotest"))
      {
         int i = 0;
-        nBytes = usb_control_msg(handle,
-                                 USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
                                  GPIO_OUTPUT, gpio_number, 0,
                                  buffer, 3, 1000);
         //got speed around 1Khz
         for (; i < 100000; ++i)
           {
-             nBytes = usb_control_msg(handle,
-                                      USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-                                      GPIO_WRITE, gpio_number | (1 << 8), 0 , buffer, 3, 1000);
+             nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                      GPIO_WRITE, gpio_number | (1 << 8), 0,
+                                      buffer, 3, 1000);
              //usleep(400000);
-             nBytes = usb_control_msg(handle,
-                                      USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-                                      GPIO_WRITE, gpio_number | (0 << 8), 0,  buffer, 10, 5000);
+             nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                      GPIO_WRITE, gpio_number | (0 << 8), 0,
+                                      buffer, 10, 5000);
              //usleep(400000);
           }
      }

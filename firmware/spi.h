@@ -1,5 +1,5 @@
 /*
- *  GPIO-12 driver
+ *  GPIO-12 board firmware
  *
  *  (C) Amitesh Singh <singh.amitesh@gmail.com>, 2016
  *
@@ -17,37 +17,35 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef COMMON_H_
-#define COMMON_H_
+#ifndef __GPIO12_SPI_H_
+#define __GPIO12_SPI_H_
 
-#ifdef AVR_USB_FIRMWARE
-#include <stdint.h>
-#endif
+#define MOSI PB3
+#define MISO PB4
+#define SCK PB5
+#define SS PB3
 
-typedef struct __attribute__((__packed__)) _gpio_info
+void spi_init()
 {
-   uint8_t no;
-   uint8_t val;
-} gpio_info;
+   DDRB |= (1 << MOSI) | (1 << SCK) | (1 << SS);
+   DDRB &= ~(1 << MISO); //set MISO at input
+   SPCR |= (1 << SPE) | (1 << MSTR) | (1 << SPR0); //f_ck/16 = 1Mhz
+}
 
-typedef struct __attribute__((__packed__)) _pktheader
+unsigned char spi_send(unsigned char data)
 {
-   uint8_t command;
-   gpio_info gpio;
-} pktheader;
+   SPDR = data;
+   while (!(SPSR & (1 << SPIF)))
+     {
+        ;
+     }
 
-typedef enum _command
+   return SPDR;
+}
+
+void spi_end()
 {
-   BOARD_INIT,
-   BOARD_RESET,
-   GPIO_INPUT,
-   GPIO_OUTPUT,
-   GPIO_READ,
-   GPIO_WRITE,
-   SPI_INIT,
-   SPI_DATA,
-   SPI_END,
-} command;
+   SPCR = 0;
+}
 
-
-#endif /* COMMON_H_ */
+#endif /* __GPIO12_SPI_H_ */

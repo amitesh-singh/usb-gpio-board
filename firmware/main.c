@@ -35,6 +35,8 @@
 #define AVR_USB_FIRMWARE
 #include "common.h"
 
+#include "spi.h"
+
 static pktheader pkt_syn, pkt_ack;
 
 static inline uint8_t _adjust_gpio(uint8_t no)
@@ -122,7 +124,7 @@ _gpio_access(uint8_t no, uint8_t write, uint8_t *val)
 #define MISO PB4
 #define SCK PB5
 #define SS PB3
-*/
+ */
 
 usbMsgLen_t
 usbFunctionSetup(uchar data[8])
@@ -135,30 +137,55 @@ usbFunctionSetup(uchar data[8])
    switch(pkt_syn.command)
      {
       case BOARD_INIT:
+
          //do board init stuffs,
          len = 1;
          //blink leds etcs ? we could use some port for blinking? not sure?
          break;
 
+      case SPI_INIT:
+         spi_init();
+
+         len = 0;
+         break;
+
+      case SPI_DATA:
+         pkt_ack.gpio.val = spi_send(rq->wValue.bytes[1]);
+
+         //pkt_ack.gpio.val = pkt_syn.gpio.val;
+
+         len = 3;
+         break;
+
+      case SPI_END:
+         spi_end();
+
+         len = 0;
+         break;
+
       case BOARD_RESET:
          while(1); // watchdog will reset the board.
+
          break;
 
       case GPIO_INPUT:
          pkt_syn.gpio.no =  pkt_ack.gpio.no = rq->wValue.bytes[0];
          _gpio_init(pkt_syn.gpio.no, 1);
+
          len = 2;
          break;
 
       case GPIO_OUTPUT:
          pkt_syn.gpio.no =  pkt_ack.gpio.no = rq->wValue.bytes[0];
          _gpio_init(pkt_syn.gpio.no, 0);
+
          len = 2;
          break;
 
       case GPIO_READ:
          pkt_syn.gpio.no =  pkt_ack.gpio.no = rq->wValue.bytes[0];
          _gpio_access(pkt_syn.gpio.no, 0, &pkt_ack.gpio.val);
+
          len = 3;
          break;
 
@@ -170,44 +197,6 @@ usbFunctionSetup(uchar data[8])
          len = 3;
          break;
 
-         ///////// SPI does not seem to work. there is always a reset of device in case
-         // you try to send multiple spi pkts
-         /*
-      case SPI_INIT:
-         DDRB |= (1 << MOSI) | (1 << SCK) | (1 << SS);
-         DDRB &= ~(1 << MISO);
-         SPCR |= (1 << SPE) | (1 << MSTR) | (1 << SPR0); //f_ck/16 = 1Mhz
-         DDRD |= (1 << PD0);
-         len = 1;
-         break;
-
-      case SPI_DATA:
-         pkt_syn.gpio.val = rq->wValue.bytes[1];
-         //PORTB &= ~(1 << SS);
-         SPDR = pkt_syn.gpio.val;
-         while (!(SPSR & (1 << SPIF)))
-           {
-              //if i don;t do usbPoll(), the usb device gets disconnected.
-              usbPoll();
-              // wait for SPI process to finish
-           }
-         //PORTB |= (1 << SS);
-         //PORTB &= ~(1 << SS);
-
-         pkt_ack.gpio.val = pkt_syn.gpio.val;
-         //TODO: test with real spi slave device.
-         //This seems to reset the device.
-         //pkt_ack.gpio.val = SPDR;
-         //usbPoll();
-         len = 3;
-         break;
-
-      case SPI_END:
-         SPCR = 0;
-         len = 1;
-         break;
-         ////////////////////////////////////////////////////////////////////
-         */
 
       default:
          break;
