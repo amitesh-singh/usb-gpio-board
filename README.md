@@ -78,11 +78,11 @@ typedef struct __attribute__((__packed__)) _gpio_info
    uint8_t val;
 } gpio_info;
 
-typedef struct __attribute__((__packed__)) _pktheader
+typedef struct __attribute__((__packed__)) _gpiopktheader
 {
    uint8_t command;
    gpio_info gpio;
-} pktheader;
+} gpiopktheader;
 ```
 
 - init the board
@@ -90,14 +90,14 @@ typedef struct __attribute__((__packed__)) _pktheader
 uint8_t buffer[3];
 usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
                         BOARD_INIT, 0, 0, buffer, 3, 1000);
-pktheader *reply = (pktheader *)buffer;
+gpiopktheader *reply = (gpiopktheader *)buffer;
 ```
 - set GPIO as output
 ```C
 uint8_t buffer[3];
 usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
                         GPIO_OUTPUT, gpio_number, 0, buffer, 3, 1000);
-pktheader *reply = (pktheader *)buffer;
+gpiopktheader *reply = (gpiopktheader *)buffer;
 ```
 
 - write to GPIO
@@ -107,7 +107,7 @@ pktheader *reply = (pktheader *)buffer;
 uint8_t buffer[3];
 usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
                         GPIO_WRITE, gpio_number | (1 << 8), 0, buffer, 3, 1000);
-pktheader *reply = (pktheader *)buffer;
+gpiopktheader *reply = (gpiopktheader *)buffer;
 ```
 
 *low*  
@@ -115,7 +115,7 @@ pktheader *reply = (pktheader *)buffer;
 uint8_t buffer[3];
 usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
                         GPIO_WRITE, gpio_number | (0 << 8), 0, buffer, 3, 1000);
-pktheader *reply = (pktheader *)buffer;
+gpiopktheader *reply = (gpiopktheader *)buffer;
 ```
 
 - Read GPIO
@@ -126,7 +126,7 @@ usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
                         GPIO_INPUT, gpio_number, 0, buffer, 3, 1000);
 usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
                         GPIO_READ, gpio_number, 0, buffer, 3, 1000);
-pktheader *reply = (pktheader *)buffer;
+gpiopktheader *reply = (gpiopktheader *)buffer;
 
 uint8_t gpio_read_val = reply->val;
 ```
@@ -136,7 +136,7 @@ uint8_t gpio_read_val = reply->val;
 uint8_t buffer[3];
 usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
                         BOARD_RESET, 0, 0, buffer, 3, 1000);
-pktheader *reply = (pktheader *)buffer;
+gpiopktheader *reply = (gpiopktheader *)buffer;
 ```
 
 you can look into [ubstest](https://raw.githubusercontent.com/amitesh-singh/usb-gpio-board/master/firmware/usbtest/usbtest.c) example for more details.
