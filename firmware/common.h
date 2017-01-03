@@ -36,6 +36,12 @@ typedef struct __attribute__((__packed__)) _pktheader
    gpio_info gpio;
 } pktheader;
 
+typedef struct __attribute__((__packed__)) _spipktheader
+{
+	uint8_t command;
+	uint8_t data;
+} spipktheader;
+
 typedef enum _command
 {
    BOARD_INIT,

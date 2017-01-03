@@ -37,7 +37,8 @@
 
 #include "spi.h"
 
-static pktheader pkt_syn, pkt_ack;
+//static pktheader pkt_syn, pkt_ack;
+static uint8_t replybuf[3];
 
 static inline uint8_t _adjust_gpio(uint8_t no)
 {
@@ -132,9 +133,10 @@ usbFunctionSetup(uchar data[8])
    usbRequest_t *rq = (void *)data;
    uint8_t len = 0;
 
-   pkt_syn.command = pkt_ack.command = rq->bRequest;
+   //pkt_syn.command = pkt_ack.command = rq->bRequest;
+   replybuf[0] = rq->bRequest;
 
-   switch(pkt_syn.command)
+   switch(rq->bRequest)
      {
       case BOARD_INIT:
 
@@ -146,13 +148,11 @@ usbFunctionSetup(uchar data[8])
       case SPI_INIT:
          spi_init();
 
-         len = 0;
+         len = 1;
          break;
 
       case SPI_DATA:
-         pkt_ack.gpio.val = spi_send(rq->wValue.bytes[1]);
-
-         //pkt_ack.gpio.val = pkt_syn.gpio.val;
+         replybuf[1] = spi_send(rq->wValue.bytes[1]);
 
          len = 3;
          break;
@@ -160,7 +160,7 @@ usbFunctionSetup(uchar data[8])
       case SPI_END:
          spi_end();
 
-         len = 0;
+         len = 1;
          break;
 
       case BOARD_RESET:
@@ -169,40 +169,39 @@ usbFunctionSetup(uchar data[8])
          break;
 
       case GPIO_INPUT:
-         pkt_syn.gpio.no =  pkt_ack.gpio.no = rq->wValue.bytes[0];
-         _gpio_init(pkt_syn.gpio.no, 1);
+         replybuf[1] = rq->wValue.bytes[0];
+         _gpio_init(replybuf[1], 1);
 
          len = 2;
          break;
 
       case GPIO_OUTPUT:
-         pkt_syn.gpio.no =  pkt_ack.gpio.no = rq->wValue.bytes[0];
-         _gpio_init(pkt_syn.gpio.no, 0);
+         replybuf[1] = rq->wValue.bytes[0];
+         _gpio_init(replybuf[1], 0);
 
          len = 2;
          break;
 
       case GPIO_READ:
-         pkt_syn.gpio.no =  pkt_ack.gpio.no = rq->wValue.bytes[0];
-         _gpio_access(pkt_syn.gpio.no, 0, &pkt_ack.gpio.val);
+         replybuf[1] = rq->wValue.bytes[0];
+         _gpio_access(replybuf[1], 0, &replybuf[2]);
 
          len = 3;
          break;
 
       case GPIO_WRITE:
-         pkt_syn.gpio.no =  pkt_ack.gpio.no = rq->wValue.bytes[0];
-         pkt_syn.gpio.val = pkt_ack.gpio.val = rq->wValue.bytes[1];
-         _gpio_access(pkt_syn.gpio.no, 1, &pkt_ack.gpio.val);
+         replybuf[1] = rq->wValue.bytes[0];
+         replybuf[2] = rq->wValue.bytes[1];
+         _gpio_access(replybuf[1], 1, &replybuf[2]);
 
          len = 3;
          break;
-
 
       default:
          break;
      }
 
-   usbMsgPtr = (unsigned char *)(&pkt_ack);
+   usbMsgPtr = (unsigned char *) replybuf;
 
    return len; // should not get here
 }
