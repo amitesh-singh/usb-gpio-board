@@ -38,9 +38,18 @@ typedef struct __attribute__((__packed__)) _pktheader
 
 typedef struct __attribute__((__packed__)) _spipktheader
 {
-	uint8_t command;
-	uint8_t data;
+   uint8_t command;
+   uint8_t data;
+   uint8_t speed; //future;
 } spipktheader;
+
+typedef struct __attribute__((__packed__)) _adcpktheader
+{
+   uint8_t command;
+   uint8_t gpio_no; //C0 -- C5
+   uint16_t data; //ADC data is 12 bits (0 - 1024)
+   uint8_t speed; //Future
+} adcpktheader;
 
 typedef enum _command
 {
@@ -53,6 +62,9 @@ typedef enum _command
    SPI_INIT,
    SPI_DATA,
    SPI_END,
+   ADC_INIT,
+   ADC_READ,
+   ADC_END,
 } command;
 
 

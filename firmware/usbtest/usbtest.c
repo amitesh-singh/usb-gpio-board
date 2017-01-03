@@ -137,15 +137,16 @@ int main(int argc, char **argv)
 
    if(argc < 2)
      {
-        printf("Usage:\n");
-        printf("usbtest on gpiono\n");
-        printf("usbtest off gpiono\n");
-        printf("usbtest read gpiono\n");
-        printf("usbtest reboot\n");
-        printf("ubstest spiinit\n");
-        printf("usbtest spiend\n");
-        printf("usbtest spidata data\n");
-        printf("usbtest gpiotest no\n");
+        printf("\nUsage:\n");
+        printf("\tusbtest on gpiono\n");
+        printf("\tusbtest off gpiono\n");
+        printf("\tusbtest read gpiono\n");
+        printf("\tusbtest reboot\n");
+        printf("\tubstest spiinit\n");
+        printf("\tusbtest spiend\n");
+        printf("\tusbtest spidata data\n");
+        printf("\tusbtest gpiotest no\n");
+        printf("\tubstest adcread adc_gpio_no (0 - 5)\n\n");
         exit(1);
      }
 
@@ -303,6 +304,27 @@ int main(int argc, char **argv)
                                       buffer, 10, 5000);
              //usleep(400000);
           }
+     }
+   else if (!strcmp(argv[1], "adcread"))
+     {
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 ADC_INIT, 0, 0,
+                                 buffer, 1, 1000);
+        printf("adc_int: bytes: %d\n", nBytes);
+
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 ADC_READ, gpio_number, 0,
+                                 buffer, 5, 1000);
+        printf("adc_read: bytes: %d\n", nBytes);
+
+        adcpktheader *adc_info = (adcpktheader *)buffer;
+        printf("ADC pin %d read value: %d\n", adc_info->gpio_no, adc_info->data);
+
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 ADC_END, gpio_number | (1 << 8), 0,
+                                 buffer, 1, 1000);
+        printf("adc_end: bytes: %d\n", nBytes);
+
      }
 
 
