@@ -196,7 +196,7 @@ int main(int argc, char **argv)
                                  GPIO_READ, gpio_number, 0,  buffer, 3, 5000);
         printf("bytes: %d\n", nBytes);
 
-        pktheader *pkt = (pktheader *) buffer;
+        gpiopktheader *pkt = (gpiopktheader *) buffer;
 
         printf("gpio value: %d\n", pkt->gpio.val);
 
@@ -321,7 +321,7 @@ int main(int argc, char **argv)
         printf("ADC pin %d read value: %d\n", adc_info->gpio_no, adc_info->data);
 
         nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-                                 ADC_END, gpio_number | (1 << 8), 0,
+                                 ADC_END, 0, 0,
                                  buffer, 1, 1000);
         printf("adc_end: bytes: %d\n", nBytes);
 

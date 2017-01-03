@@ -14,13 +14,10 @@ I shall produce an exclusive kicad schematic for this board soon.
 `make hex`  
 `avrdude -c usbasp -p m8 -U flash:w:main.hex`  
 
-### How to compile and load driver
-`cd driver/gpio`  
-`make`  
-`sudo insmod usb-gpio12.ko`  
+
 
 ### PIN mapping
-
+#### GPIO pins
 Atmega8 gpio | pin number
 -------------| ------------
 PD0          |   1
@@ -40,7 +37,22 @@ PB5          |   12
 PB6          |   Not available (used by crystal)
 PB7          |   Not available (used by crystal)
 
-### how to access gpio port
+#### ADC pins
+Atmega8 ADC pin | pin number
+--------------- | ------------
+PC0             |   0
+PC1             |   1
+PC2             |   2
+PC3             |   3
+PC4             |   4
+PC5             |   5
+
+### how to access gpio port as linux kernel sysfs
+You need to load the kernel driver for this.
+
+`$ cd driver/gpio`  
+`$ make`  
+`$ sudo insmod usb-gpio12.ko`  
 `$ cd /sys/class/gpio/ `  
            `gpiochip**N**` where **N** is the value allocated by kernel   
 `$ sudo chmod 666 export unexport`  
@@ -161,10 +173,6 @@ usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
 gpiopktheader *reply = (gpiopktheader *)buffer;
 ```
 
-you can look into [ubstest](https://raw.githubusercontent.com/amitesh-singh/usb-gpio-board/master/firmware/usbtest/usbtest.c) example for more details.
-#### example
-- [on-off](https://raw.githubusercontent.com/amitesh-singh/usb-gpio-board/master/examples/on-off/on-off.c)  
-
 - SPI communication
 
 ```C
@@ -203,6 +211,10 @@ nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOI
                          ADC_END, 0, 0,
                          buffer, 1, 1000);
 ```
+
+you can look into [ubstest](https://raw.githubusercontent.com/amitesh-singh/usb-gpio-board/master/firmware/usbtest/usbtest.c) example for more details.
+#### example
+- [on-off](https://raw.githubusercontent.com/amitesh-singh/usb-gpio-board/master/examples/on-off/on-off.c)  
 
 ### GPIO write speed
 
