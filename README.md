@@ -25,20 +25,20 @@ Atmega8 gpio | pin number
 -------------| ------------
 PD0          |   1
 PD1          |   2
-PD2          | Not available (used as D+)
-PD3          | 3
-PD4          | Not available (used as D-)
-PD5          | 4
-PD6          | 5
-PD7          | 6
-PB0          | 7
-PB1          | 8
-PB2          | 9
-PB3          | 10
-PB4          | 11
-PB5          | 12
-PB6          | Not available (used by crystal)
-PB7          | not available (used by crystal)
+PD2          |   Not available (used as D+)
+PD3          |   3
+PD4          |   Not available (used as D-)
+PD5          |   4
+PD6          |   5
+PD7          |   6
+PB0          |   7
+PB1          |   8
+PB2          |   9
+PB3          |   10
+PB4          |   11
+PB5          |   12
+PB6          |   Not available (used by crystal)
+PB7          |   Not available (used by crystal)
 
 ### how to access gpio port
 `$ cd /sys/class/gpio/ `  
@@ -62,20 +62,10 @@ include following code in your application code or include the common.h file.
 
 
 ```C
-typedef enum _command
-{
-   BOARD_INIT,  // This does the init of board
-   BOARD_RESET, // This restarts the board
-   GPIO_INPUT,  // Set GPIO as input
-   GPIO_OUTPUT, // Set GPIO as output
-   GPIO_READ,   // Read GPIO
-   GPIO_WRITE,  // Write to GPIO
-};
-
 typedef struct __attribute__((__packed__)) _gpio_info
 {
    uint8_t no;
-   uint8_t val;
+   uint8_t data;
 } gpio_info;
 
 typedef struct __attribute__((__packed__)) _gpiopktheader
@@ -83,6 +73,38 @@ typedef struct __attribute__((__packed__)) _gpiopktheader
    uint8_t command;
    gpio_info gpio;
 } gpiopktheader;
+
+typedef struct __attribute__((__packed__)) _spipktheader
+{
+   uint8_t command;
+   uint8_t data;
+   uint8_t speed; //future;
+} spipktheader;
+
+typedef struct __attribute__((__packed__)) _adcpktheader
+{
+   uint8_t command;
+   uint8_t gpio_no; //C0 -- C5
+   uint16_t data; //ADC data is 12 bits (0 - 1024)
+   uint8_t speed; //Future
+} adcpktheader;
+
+typedef enum _command
+{
+   BOARD_INIT, // This does the init of board
+   BOARD_RESET, // This restarts the board
+   GPIO_INPUT, // Set GPIO as input
+   GPIO_OUTPUT, // Set GPIO as output
+   GPIO_READ,   // Read GPIO
+   GPIO_WRITE, // Write to GPIO
+   SPI_INIT,  // Initialize SPI
+   SPI_DATA,  // Send data over SPI
+   SPI_END,  // End spi connection
+   ADC_INIT, // Initialize ADC
+   ADC_READ, // Read ADC value from ADC pin (C0 - C5)
+   ADC_END,  // End ADC
+} command;
+
 ```
 
 - init the board
@@ -143,6 +165,44 @@ you can look into [ubstest](https://raw.githubusercontent.com/amitesh-singh/usb-
 #### example
 - [on-off](https://raw.githubusercontent.com/amitesh-singh/usb-gpio-board/master/examples/on-off/on-off.c)  
 
+- SPI communication
+
+```C
+uint8_t spi_data = 111;
+
+nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 SPI_INIT, 0, 0, 0, 0, 5000);
+
+nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                         SPI_DATA, 0 | (spi_data << 8), 0,
+                         buffer, 3, 5000);
+spipktheader *spi_info = (spipktheader *) buffer;
+printf("MOSI data: %d", spi_info->data);
+
+nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                         SPI_END, 0, 0,
+                         0, 0, 5000);
+```
+
+- ADC
+
+```C
+
+nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                                 ADC_INIT, 0, 0,
+                                 buffer, 1, 1000);
+
+nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                        ADC_READ, gpio_number, 0,
+                        buffer, 5, 1000);
+
+adcpktheader *adc_info = (adcpktheader *)buffer;
+printf("ADC pin %d read value: %d\n", adc_info->gpio_no, adc_info->data);
+
+nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+                         ADC_END, 0, 0,
+                         buffer, 1, 1000);
+```
 
 ### GPIO write speed
 
@@ -153,7 +213,7 @@ GPIO write speed is close to 1Khz.
  - ~~write basic gpio driver~~ **DONE**
  - ~~Add support of spin locking in gpio driver.~~ **DONE**
  - Add support of spi bitbang driver.
- - ~~Add support of spi hw in firmware.~~ **DONE** 
+ - ~~Add support of spi hw in firmware.~~ **DONE**
  - Add support of spi hw driver.
  - Add support of i2c in firmware.
  - Add support of i2c driver.
