@@ -231,6 +231,10 @@ GPIO write speed is close to 1Khz.
  - Add support of i2c driver.
  - ~~Add adc support in firmware.~~  **DONE**
  - Add adc driver support.
+ - Add PWM pins support.
+ - Add PWM driver?.
+ - Add UART support.
+ - Add UART ttyUSB driver support.
  - design schematic.
 
 
