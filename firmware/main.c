@@ -133,7 +133,6 @@ usbFunctionSetup(uchar data[8])
    usbRequest_t *rq = (void *)data;
    uint8_t len = 0;
 
-   //pkt_syn.command = pkt_ack.command = rq->bRequest;
    replybuf[0] = rq->bRequest;
 
    switch(rq->bRequest)
