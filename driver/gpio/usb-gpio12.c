@@ -74,7 +74,7 @@ _gpioa_set(struct gpio_chip *chip,
                          data->timeout);
    spin_unlock(&data->lock);
 
-   if (ret != sizeof(pktheader))
+   if (ret != sizeof(gpiopktheader))
      dev_err(chip->dev, "usb error setting pin value\n");
 }
 
@@ -83,7 +83,7 @@ _gpioa_get(struct gpio_chip *chip,
            unsigned offset)
 {
    struct my_usb *data = container_of(chip, struct my_usb, chip);
-   pktheader *pkt;
+   gpiopktheader *pkt;
    int ret;
 
    printk(KERN_INFO "GPIO GET INFO: %d", offset);
@@ -103,15 +103,15 @@ _gpioa_get(struct gpio_chip *chip,
                          data->timeout);
    spin_unlock(&data->lock);
 
-   pkt = (pktheader *)data->buf;
+   pkt = (gpiopktheader *)data->buf;
 
-   if (ret != sizeof(pktheader))
+   if (ret != sizeof(gpiopktheader))
      {
         printk(KERN_ALERT "ret = %d Failed to get correct reply", ret);
         return -EREMOTEIO;
      }
 
-   return pkt->gpio.val;
+   return pkt->gpio.data;
 }
 
 static int
@@ -142,7 +142,7 @@ _direction_output(struct gpio_chip *chip,
 
    spin_unlock(&data->lock);
 
-   if (ret != sizeof(pktheader) - 1)
+   if (ret != sizeof(gpiopktheader) - 1)
      {
         printk(KERN_ALERT "ret = %d Failed to get correct reply", ret);
         return -EREMOTEIO;
@@ -157,7 +157,6 @@ _direction_input(struct gpio_chip *chip,
 {
    struct my_usb *data = container_of(chip, struct my_usb, chip);
    int ret;
-   unsigned char replybuf[3];
 
    spin_lock(&data->lock);
    ret = usb_control_msg(data->udev,
@@ -174,11 +173,11 @@ _direction_input(struct gpio_chip *chip,
                          usb_rcvctrlpipe(data->udev, 0),
                          GPIO_INPUT, USB_TYPE_VENDOR | USB_DIR_IN,
                          (offset + 1), 0,
-                         replybuf, 3,
+                         (u8 *)data->buf, 3,
                          data->timeout);
    spin_unlock(&data->lock);
 
-   if (ret != sizeof(pktheader) - 1)
+   if (ret != sizeof(gpiopktheader) - 1)
      {
         printk(KERN_ALERT "ret= %d Failed to get correct reply", ret);
         return -EREMOTEIO;
@@ -258,7 +257,7 @@ my_usb_probe(struct usb_interface *interface,
                          data->timeout);
    spin_unlock(&data->lock);
 
-   if (ret != sizeof(pktheader) - 2)
+   if (ret != sizeof(gpiopktheader) - 2)
      {
         printk(KERN_ALERT "ret = %d, func= %s Failed to get correct reply", ret, __func__);
         return -EREMOTEIO;
