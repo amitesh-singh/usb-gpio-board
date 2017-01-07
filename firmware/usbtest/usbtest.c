@@ -198,7 +198,7 @@ int main(int argc, char **argv)
 
         gpiopktheader *pkt = (gpiopktheader *) buffer;
 
-        printf("gpio value: %d\n", pkt->gpio.val);
+        printf("gpio value: %d\n", pkt->gpio.data);
 
      }
    else if (strcmp(argv[1], "reboot") == 0)

@@ -37,6 +37,7 @@
 
 #include "spi.h"
 #include "adc.h"
+#include "i2c.h"
 
 static uint8_t replybuf[5];
 
@@ -126,6 +127,8 @@ _gpio_access(uint8_t no, uint8_t write, uint8_t *val)
 #define SCK PB5
 #define SS PB3
  */
+
+static uint16_t dataSent = 0;
 
 usbMsgLen_t
 usbFunctionSetup(uchar data[8])
@@ -218,6 +221,29 @@ usbFunctionSetup(uchar data[8])
 
          len = 1;
          break;
+      case I2C_INIT:
+         i2c_init();
+
+         len = 1;
+         break;
+      case I2C_READ:
+         //i2c_receive(rq->wValue.bytes[0], &replybuf[1], 1);
+         dataSent = 0;
+         replybuf[1] = rq->wValue.bytes[0]; //address
+
+         len = USB_NO_MSG;
+         break;
+      case I2C_WRITE:
+         //i2c_transmit();
+    	  replybuf[1] = rq->wValue.bytes[0]; //address
+
+         len = USB_NO_MSG;
+         break;
+      case I2C_END:
+         i2c_end();
+
+         len = 1;
+         break;
 
       default:
          break;
@@ -226,6 +252,30 @@ usbFunctionSetup(uchar data[8])
    usbMsgPtr = (unsigned char *) replybuf;
 
    return len; // should not get here
+}
+
+//send data to Pc upto 1024 bytes
+// USB_CFG_IMPLEMENT_FN_READ
+USB_PUBLIC uchar usbFunctionRead(uchar *data, uchar len)
+{
+   uint8_t keepSendingData = 0;
+
+   //i2c_receive(rq->wValue.bytes[0], &replybuf[1], 1);
+   if (dataSent < 1024)
+     {
+        i2c_receive(replybuf[1], data, len);
+        keepSendingData = 1;
+        dataSent += len;
+     }
+
+   return keepSendingData; //non zero value keeping running;
+}
+
+USB_PUBLIC uchar usbFunctionWrite(uchar *data, uchar len)
+{
+	i2c_receive(replybuf[1], data, len);
+
+	return 0;
 }
 
 int __attribute__((noreturn))

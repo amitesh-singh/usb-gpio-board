@@ -51,6 +51,15 @@ typedef struct __attribute__((__packed__)) _adcpktheader
    uint8_t speed; //Future
 } adcpktheader;
 
+typedef struct __attribute__((__packed__)) _i2cpktheader
+{
+   uint8_t command;
+   uint8_t address;
+   uint8_t data; //this might not require?
+   uint8_t speed;
+
+} i2cpktheader;
+
 typedef enum _command
 {
    BOARD_INIT, // This does the init of board
@@ -65,6 +74,10 @@ typedef enum _command
    ADC_INIT, // Initialize ADC
    ADC_READ, // Read ADC value from ADC pin (C0 - C5)
    ADC_END,  // End ADC
+   I2C_INIT, // init i2c
+   I2C_READ, // read data on i2c
+   I2C_WRITE, // write date to i2c
+   I2C_END, // end i2c connection
 } command;
 
 
