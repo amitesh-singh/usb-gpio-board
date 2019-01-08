@@ -75,7 +75,7 @@ _gpioa_set(struct gpio_chip *chip,
    spin_unlock(&data->lock);
 
    if (ret != sizeof(gpiopktheader))
-     dev_err(chip->dev, "usb error setting pin value\n");
+     dev_err(chip->parent, "usb error setting pin value\n");
 }
 
 static int
@@ -131,7 +131,7 @@ _direction_output(struct gpio_chip *chip,
                          data->timeout);
    if (ret != 0)
      {
-        dev_err(chip->dev, "Failed to send data to usb device\n");
+        dev_err(chip->parent, "Failed to send data to usb device\n");
      }
    ret = usb_control_msg(data->udev,
                          usb_rcvctrlpipe(data->udev, 0),
@@ -167,7 +167,7 @@ _direction_input(struct gpio_chip *chip,
                          data->timeout);
    if (ret != 0)
      {
-        dev_err(chip->dev, "Failed to send data to device\n");
+        dev_err(chip->parent, "Failed to send data to device\n");
      }
    ret = usb_control_msg(data->udev,
                          usb_rcvctrlpipe(data->udev, 0),
@@ -214,7 +214,7 @@ my_usb_probe(struct usb_interface *interface,
    data->udev = usb_get_dev(udev);
 
    data->chip.label = "gpio-12";
-   data->chip.dev = &data->udev->dev; // optional device providing the GPIOs
+   data->chip.parent = &data->udev->dev; // optional device providing the GPIOs
    data->chip.owner = THIS_MODULE; // helps prevent removal of modules exporting active GPIOs, so this is required for proper cleanup
    data->chip.base = -1;
    data->chip.ngpio = 12; /* 12 GPIO pins, PD0, PD1, PD3, PD5, PD6, PD7 (1 - 6);
@@ -247,7 +247,7 @@ my_usb_probe(struct usb_interface *interface,
                          data->timeout);
    if (ret != 0)
      {
-        dev_err(data->chip.dev, "Failed to send data to device\n");
+        dev_err(data->chip.parent, "Failed to send data to device\n");
      }
    ret = usb_control_msg(data->udev,
                          usb_rcvctrlpipe(data->udev, 0),
